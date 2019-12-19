@@ -3,6 +3,7 @@ package graphic;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 import application.Main;
 import graphic.util.Alerts;
@@ -34,12 +35,15 @@ public class MainViewController implements Initializable {
 	
 	@FXML
 	public void onMenuItemDepartmentAction() {
-		loadView2("/graphic/DepartmentView.fxml");
+		loadView("/graphic/DepartmentView.fxml", (DepartmentViewController controller) -> {
+			controller.setDepartmentService(new DepartmentService());
+			controller.updateTableView();
+		});
 	}
 	
 	@FXML
 	public void onMenuItemAboutAction() {
-		loadView("/graphic/About.fxml");
+		loadView("/graphic/About.fxml", x -> {});
 	}
 	
 	@Override
@@ -47,7 +51,7 @@ public class MainViewController implements Initializable {
 		
 	}
 	
-	private synchronized void loadView(String AbsolutePath) {
+	private synchronized <T> void loadView(String AbsolutePath, Consumer<T> initializingAction) {
 		try {
 		FXMLLoader loader = new FXMLLoader(getClass().getResource(AbsolutePath));
 		VBox newVBox = loader.load();
@@ -59,6 +63,9 @@ public class MainViewController implements Initializable {
 		mainVBox.getChildren().clear();
 		mainVBox.getChildren().add(mainMenu);
 		mainVBox.getChildren().addAll(newVBox.getChildren());
+		
+		T controller = loader.getController();
+		initializingAction.accept(controller);
 		
 		}
 		catch(IOException e) {
@@ -66,27 +73,5 @@ public class MainViewController implements Initializable {
 		}
 	}
 	
-	private synchronized void loadView2(String AbsolutePath) {
-		try {
-		FXMLLoader loader = new FXMLLoader(getClass().getResource(AbsolutePath));
-		VBox newVBox = loader.load();
-		
-		Scene mainScene = Main.getMainScene();
-		VBox mainVBox =(VBox) ((ScrollPane)mainScene.getRoot()).getContent();
-		
-		Node mainMenu = mainVBox.getChildren().get(0);
-		mainVBox.getChildren().clear();
-		mainVBox.getChildren().add(mainMenu);
-		mainVBox.getChildren().addAll(newVBox.getChildren());
-		
-		DepartmentViewController controller = loader.getController();
-		controller.setDepartmentService(new DepartmentService());
-		controller.updateTableView();
-		}
-		catch(IOException e) {
-			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
-		}
-	}
-
 	
 }
