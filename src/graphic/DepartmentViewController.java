@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import application.Main;
+import graphic.listeners.DataChangeListener;
 import graphic.util.Alerts;
 import graphic.util.Utils;
 import javafx.collections.FXCollections;
@@ -26,7 +27,7 @@ import javafx.stage.Stage;
 import model.entities.Department;
 import model.services.DepartmentService;
 
-public class DepartmentViewController implements Initializable{
+public class DepartmentViewController implements Initializable, DataChangeListener{
 	
 	private DepartmentService service;
 
@@ -47,7 +48,8 @@ public class DepartmentViewController implements Initializable{
 	@FXML
 	public void onBtNewAction(ActionEvent event) {
 		Stage parentStage = Utils.currentStage(event);
-		createDialogForm("/graphic/DepartmentForm.fxml", parentStage);
+		Department obj = new Department();
+		createDialogForm(obj, "/graphic/DepartmentForm.fxml", parentStage);
 	}
 	
 	public void setDepartmentService(DepartmentService service) {
@@ -76,10 +78,16 @@ public class DepartmentViewController implements Initializable{
 		tvDepartment.setItems(obsList);
 	}
 	
-	private void createDialogForm(String AbsolutePath, Stage parentStage) {
+	private void createDialogForm(Department obj, String AbsolutePath, Stage parentStage) {
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(AbsolutePath));
 			Pane pane = loader.load();
+			
+			DepartmentFormController controller = loader.getController();
+			controller.setDepartment(obj);
+			controller.setDepartmentService(new DepartmentService());
+			controller.subscribeDataChangeListener(this);
+			controller.updateFormData();
 			
 			Stage dialogStage = new Stage();
 			dialogStage.setTitle("Enter Department data: ");
@@ -92,6 +100,11 @@ public class DepartmentViewController implements Initializable{
 		catch(IOException e) {
 			Alerts.showAlert("IOException", null, e.getMessage(), AlertType.ERROR);
 		}
+	}
+
+	@Override
+	public void onDataChanged() {
+		updateTableView();
 	}
 	
 }
